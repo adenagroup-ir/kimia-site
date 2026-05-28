@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>کیمیا مبتکر فرا هوشمند</title>
+<style>
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(circle at center,#121212,#020202);
+  font-family: Tahoma, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+canvas {
+  position: absolute;
+  inset: 0;
+}
+.content {
+  position: relative;
+  z-index: 5;
+  text-align: center;
+  transform: translateY(-10px);
+  padding: 20px;
+}
+.company {
+  font-size: clamp(28px, 5vw, 56px);
+  color: white;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-shadow:
+    0 0 12px rgba(0,183,255,.8),
+    0 0 35px rgba(0,183,255,.5),
+    0 0 80px rgba(0,183,255,.3);
+  animation: glow 4s ease-in-out infinite;
+}
+.phone {
+  margin-top: 15px;
+  font-size: clamp(18px,4vw,24px);
+  color: #00f0ff;
+  letter-spacing: 2px;
+  text-shadow:
+    0 0 15px rgba(0,255,255,.9),
+    0 0 35px rgba(0,255,255,.5);
+  animation: pulse 3s ease-in-out infinite;
+}
+@keyframes glow {
+  0%,100% { opacity:1; transform:translateY(0px);}
+  50% { opacity:.85; transform:translateY(-4px);}
+}
+@keyframes pulse {
+  0%,100% { opacity:1; }
+  50% { opacity:.6; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="content">
+  <div class="company">کیمیا مبتکر فرا هوشمند</div>
+  <div class="phone">09127603310</div>
+</div>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+let w = canvas.width = window.innerWidth;
+let h = canvas.height = window.innerHeight;
+
+let pointer = {x: w/2, y: h/2}; // default center
+
+// Mouse & touch support
+window.addEventListener("mousemove",(e)=>{ pointer.x = e.x; pointer.y = e.y; });
+window.addEventListener("touchmove",(e)=>{
+  if(e.touches.length > 0){
+    pointer.x = e.touches[0].clientX;
+    pointer.y = e.touches[0].clientY;
+  }
+});
+
+window.addEventListener("resize",()=>{
+  w = canvas.width = window.innerWidth;
+  h = canvas.height = window.innerHeight;
+});
+
+class Particle{
+  constructor(){
+    this.reset();
+  }
+  reset(){
+    this.x = Math.random()*w;
+    this.y = Math.random()*h;
+    this.size = Math.random()*2+0.5;
+    this.vx = (Math.random()-0.5)*0.6;
+    this.vy = (Math.random()-0.5)*0.6;
+  }
+  update(){
+    this.x += this.vx;
+    this.y += this.vy;
+    if(this.x<0||this.x>w) this.vx*=-1;
+    if(this.y<0||this.y>h) this.vy*=-1;
+    // stronger reaction to pointer
+    let dx = this.x - pointer.x;
+    let dy = this.y - pointer.y;
+    let dist = Math.sqrt(dx*dx + dy*dy);
+    if(dist < 180){
+      this.x += dx * 0.01;
+      this.y += dy * 0.01;
+    }
+  }
+  draw(){
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+    ctx.fillStyle="#00b7ff";
+    ctx.fill();
+  }
+}
+
+const particles = [];
+for(let i=0;i<120;i++){particles.push(new Particle());}
+
+function connect(){
+  for(let a=0;a<particles.length;a++){
+    for(let b=a;b<particles.length;b++){
+      let dx = particles[a].x-particles[b].x;
+      let dy = particles[a].y-particles[b].y;
+      let dist = dx*dx + dy*dy;
+      if(dist<10000){
+        let opacity = 1 - dist/10000;
+        ctx.strokeStyle=`rgba(0,183,255,${opacity*0.35})`;
+        ctx.lineWidth = 0.7;
+        ctx.beginPath();
+        ctx.moveTo(particles[a].x,particles[a].y);
+        ctx.lineTo(particles[b].x,particles[b].y);
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function animate(){
+  ctx.clearRect(0,0,w,h);
+  for(let p of particles){p.update();p.draw();}
+  connect();
+  requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+
+</body>
+</html>
